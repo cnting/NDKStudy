@@ -154,7 +154,7 @@ extern "C"
 JNIEXPORT void JNICALL
 Java_com_cnting_jni_MainActivity_staticLocalCache(JNIEnv *env, jobject thiz, jstring str) {
     jclass j_clazz = env->GetObjectClass(thiz);
-    //局部缓存，如果这个方法多次调用，不需要反复去获取
+    //声明为static变量进行局部缓存
     static jfieldID j_fid = NULL;
     if (j_fid == NULL) {
         j_fid = env->GetStaticFieldID(j_clazz, "staticName", "Ljava/lang/String;");
@@ -165,16 +165,51 @@ Java_com_cnting_jni_MainActivity_staticLocalCache(JNIEnv *env, jobject thiz, jst
     env->SetStaticObjectField(j_clazz, j_fid, str);
 }
 /**
- * 全局缓存
+ * 全局缓存，在初始化时进行缓存
  */
 static jfieldID static_f_id1 = NULL;
 static jfieldID static_f_id2 = NULL;
 static jfieldID static_f_id3 = NULL;
-/**
- * 初始化全局缓存
- */
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_cnting_jni_MainActivity_initStaticCache(JNIEnv *env, jobject thiz) {
+    //这个方法在初始化时被调用
+
     //在这里给 static_f_id1、static_f_id2、static_f_id3 赋值
+}
+/**
+ * 异常处理
+ */
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_cnting_jni_MainActivity_exception(JNIEnv *env, jobject thiz) {
+    //native出错了，是没法在java层是没法被try catch的
+    //比如这里拿一个不存在的变量
+    jclass j_clazz = env->GetObjectClass(thiz);
+    jfieldID j_fid = env->GetFieldID(j_clazz, "name3", "Ljava/lang/String;");
+
+    //方式1：补救措施，拿不到name3 就 拿name
+    //判断是否出现异常
+//    jthrowable throwable = env->ExceptionOccurred();
+//    if(throwable){
+//        //要记得先把异常清除!!!
+//        env->ExceptionClear();
+//        LOGE("有异常");
+//        //然后重新获取 name 属性
+//        j_fid = env->GetFieldID(j_clazz, "name", "Ljava/lang/String;");
+//    }
+
+    //方式2：想给Java层抛异常
+    jthrowable throwable = env->ExceptionOccurred();
+    if(throwable){
+        //要记得先把异常清除!!!
+        env->ExceptionClear();
+        jclass no_such_clz =env->FindClass("java/lang/NoSuchFieldException");
+        env->ThrowNew(no_such_clz,"NoSuchFieldException name3");
+        //记得return !!!
+        return;
+    }
+
+    jstring name = static_cast<jstring>(env->GetObjectField(thiz, j_fid));
+
 }

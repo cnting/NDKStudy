@@ -6,6 +6,7 @@ import android.util.Log
 import android.widget.TextView
 import com.cnting.jni.databinding.ActivityMainBinding
 import java.util.UUID
+import kotlin.jvm.Throws
 
 class MainActivity : AppCompatActivity() {
 
@@ -44,11 +45,17 @@ class MainActivity : AppCompatActivity() {
 //        binding.sampleText4.text = getGlobalRef()
 
         staticLocalCache("aaa")
-        Log.d("===>", "name:$staticName")
+        Log.d("===>", "修改staticName:$staticName")
         staticLocalCache("bbb")
-        Log.d("===>", "name:$staticName")
+        Log.d("===>", "修改staticName:$staticName")
         staticLocalCache("ccc")
-        Log.d("===>", "name:$staticName")
+        Log.d("===>", "修改staticName:$staticName")
+
+        try {
+            exception()
+        }catch (e:NoSuchFieldException){
+            e.printStackTrace()
+        }
     }
 
     fun add(a: Int, b: Int): Int {
@@ -66,7 +73,10 @@ class MainActivity : AppCompatActivity() {
     external fun getGlobalRef(): String
     external fun deleteGlobalRef()
     external fun staticLocalCache(str: String)
-    external fun initStaticCache();
+    external fun initStaticCache()
+
+    @Throws(NoSuchFieldException::class)
+    external fun exception()
 
 
     companion object {
