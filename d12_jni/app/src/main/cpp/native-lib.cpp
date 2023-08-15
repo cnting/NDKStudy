@@ -4,6 +4,7 @@
 
 #define TAG "JNI_TAG"
 #define LOGE(...)  __android_log_print(ANDROID_LOG_ERROR,TAG,__VA_ARGS__)
+using namespace std;
 /**
  * 修改属性
  */
@@ -177,16 +178,47 @@ Java_com_cnting_jni_MainActivity_initStaticCache(JNIEnv *env, jobject thiz) {
 
     //在这里给 static_f_id1、static_f_id2、static_f_id3 赋值
 }
+
 /**
  * 异常处理
+ * 1.在c++层如果是自己写的代码或调用别人的代码，记得try住，如果不try，在Java层try是没用的
+ * 2.如果异常需要抛给Java层，一定要按照Java层抛异常的方式
+ * 3.如果是自己写的NDK的代码，最好抛自己写的异常
+ * 4.如果是c/c++写代码，最好抛系统异常 或 继承系统异常
  */
+
+/**
+ * 自定义异常，继承out_of_range，这个是系统异常
+ */
+class Exception : public out_of_range {
+public:
+    Exception(string msg) : out_of_range(msg) {
+        this->msg = msg;
+    }
+
+    const char *what() {
+        return this->msg.c_str();
+    }
+
+    string msg;
+};
+
+//如果代码中会抛异常，最好要在方法名上声明可能抛的异常
+void c_method() throw(Exception, int) {
+    throw Exception("异常了");
+}
+
+void c_method1() {
+
+}
+
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_cnting_jni_MainActivity_exception(JNIEnv *env, jobject thiz) {
     //native出错了，是没法在java层是没法被try catch的
     //比如这里拿一个不存在的变量
-    jclass j_clazz = env->GetObjectClass(thiz);
-    jfieldID j_fid = env->GetFieldID(j_clazz, "name3", "Ljava/lang/String;");
+//    jclass j_clazz = env->GetObjectClass(thiz);
+//    jfieldID j_fid = env->GetFieldID(j_clazz, "name3", "Ljava/lang/String;");
 
     //方式1：补救措施，拿不到name3 就 拿name
     //判断是否出现异常
@@ -200,16 +232,47 @@ Java_com_cnting_jni_MainActivity_exception(JNIEnv *env, jobject thiz) {
 //    }
 
     //方式2：想给Java层抛异常
-    jthrowable throwable = env->ExceptionOccurred();
-    if(throwable){
-        //要记得先把异常清除!!!
-        env->ExceptionClear();
-        jclass no_such_clz =env->FindClass("java/lang/NoSuchFieldException");
-        env->ThrowNew(no_such_clz,"NoSuchFieldException name3");
-        //记得return !!!
+//    jthrowable throwable = env->ExceptionOccurred();
+//    if (throwable) {
+//        //要记得先把异常清除!!!
+//        env->ExceptionClear();
+//        jclass no_such_clz = env->FindClass("java/lang/NoSuchFieldException");
+//        env->ThrowNew(no_such_clz, "NoSuchFieldException name3");
+//        //记得return !!!
+//        return;
+//    }
+//    jstring name = static_cast<jstring>(env->GetObjectField(thiz, j_fid));
+
+
+    //方式3：try catch住native层异常，并给Java层抛异常
+    try {
+        c_method();
+    } catch (const Exception &exception) {
+        //按Java层抛异常方式
+        jclass no_such_clz = env->FindClass("java/lang/NoSuchFieldException");
+        env->ThrowNew(no_such_clz, exception.msg.c_str());
+    }
+}
+/**
+ * 仿System.arraycopy()
+ */
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_cnting_jni_MainActivity_arraycopy(JNIEnv *env, jobject thiz, jobject src, jint src_pos,
+                                           jobject dest, jint dest_pos, jint length) {
+
+    //做一些判断是否是数组
+    jobjectArray src_array = static_cast<jobjectArray>(src);
+    jobjectArray dest_array = static_cast<jobjectArray>(dest);
+
+    //转换失败抛异常
+    if (src_array == NULL || dest_array == NULL) {
+        LOGE("转换失败");
         return;
     }
 
-    jstring name = static_cast<jstring>(env->GetObjectField(thiz, j_fid));
-
+    for (int i = src_pos; i < src_pos + length; i++) {
+        jobject obj = env->GetObjectArrayElement(src_array, i);
+        env->SetObjectArrayElement(dest_array, i, obj);
+    }
 }

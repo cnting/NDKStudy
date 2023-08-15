@@ -1,12 +1,10 @@
 package com.cnting.jni
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import com.cnting.jni.databinding.ActivityMainBinding
 import java.util.UUID
-import kotlin.jvm.Throws
 
 class MainActivity : AppCompatActivity() {
 
@@ -53,8 +51,24 @@ class MainActivity : AppCompatActivity() {
 
         try {
             exception()
-        }catch (e:NoSuchFieldException){
+        } catch (e: NoSuchFieldException) {
             e.printStackTrace()
+        }
+
+        arrayCopy()
+    }
+
+    private fun arrayCopy() {
+        val persons = arrayOfNulls<Person>(10)
+        (0 until 10).forEach {
+            persons[it] = Person("ct", it + 1)
+        }
+        val newPerson = arrayOfNulls<Person>(10)
+
+        arraycopy(persons, 0, newPerson, 0, persons.size)
+
+        newPerson.forEach {
+            Log.i("===>", "数组拷贝 第${it}个：${it?.name}")
         }
     }
 
@@ -74,6 +88,11 @@ class MainActivity : AppCompatActivity() {
     external fun deleteGlobalRef()
     external fun staticLocalCache(str: String)
     external fun initStaticCache()
+    external fun arraycopy(
+        src: Any?, srcPos: Int,
+        dest: Any?, destPos: Int,
+        length: Int
+    )
 
     @Throws(NoSuchFieldException::class)
     external fun exception()
