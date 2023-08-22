@@ -14,9 +14,5 @@ class FaceDetection {
      */
     external fun loadCascade(filePath:String)
 
-    companion object {
-        init {
-            System.loadLibrary("opencv")
-        }
-    }
+
 }

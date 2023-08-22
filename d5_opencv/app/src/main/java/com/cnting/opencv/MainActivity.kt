@@ -1,5 +1,6 @@
 package com.cnting.opencv
 
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
@@ -23,38 +24,17 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val bitmap = BitmapFactory.decodeResource(resources, R.drawable.b)
-        binding.image.setImageBitmap(bitmap)
-        binding.faceBtn.setOnClickListener { faceDetection(bitmap) }
-
-        copyCascadeFile()
-        faceDetection.loadCascade(mCascadeFile.absolutePath)
-
+        binding.faceBtn.setOnClickListener {
+            startActivity(Intent(this, FactDetectionActivity::class.java))
+        }
+        binding.filterBtn.setOnClickListener {
+            startActivity(Intent(this, FilterActivity::class.java))
+        }
     }
 
-    private fun faceDetection(bitmap: Bitmap) {
-        faceDetection.faceDetectionSaveInfo(bitmap)
-        binding.image.setImageBitmap(bitmap)
-    }
-
-    private fun copyCascadeFile() {
-        try {
-            // load cascade file from application resources
-            val `is` = resources.openRawResource(R.raw.lbpcascade_frontalface)
-            val cascadeDir = getDir("cascade", MODE_PRIVATE)
-            mCascadeFile = File(cascadeDir, "lbpcascade_frontalface.xml")
-            if (mCascadeFile.exists()) {
-                return
-            }
-            val os = FileOutputStream(mCascadeFile)
-            val buffer = ByteArray(4096)
-            var bytesRead: Int
-            while (`is`.read(buffer).also { bytesRead = it } != -1) {
-                os.write(buffer, 0, bytesRead)
-            }
-            `is`.close()
-        } catch (e: IOException) {
-            e.printStackTrace()
+    companion object {
+        init {
+            System.loadLibrary("opencv")
         }
     }
 }

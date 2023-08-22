@@ -261,7 +261,7 @@ JNIEXPORT void JNICALL
 Java_com_cnting_jni_MainActivity_arraycopy(JNIEnv *env, jobject thiz, jobject src, jint src_pos,
                                            jobject dest, jint dest_pos, jint length) {
 
-    //做一些判断是否是数组
+    //判断是否是数组
     jobjectArray src_array = static_cast<jobjectArray>(src);
     jobjectArray dest_array = static_cast<jobjectArray>(dest);
 

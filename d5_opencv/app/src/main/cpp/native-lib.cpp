@@ -107,18 +107,18 @@ Java_com_cnting_opencv_FaceDetection_faceDetectionSaveInfo(JNIEnv *env, jobject 
     //识别人脸，要加载人脸分类器文件
     std::vector<Rect> faces;
     cascadeClassifier.detectMultiScale(equalize_mat, faces, 1.1, 5);
-    LOGE("人脸个数:%d",faces.size());
-    if(faces.size()==1){
+    LOGE("人脸个数:%d", faces.size());
+    if (faces.size() == 1) {
         //拿到人脸区域
         Rect faceRect = faces[0];
 
         //在人脸部位画个图
-        rectangle(mat,faceRect,Scalar(255,155,144),8);
+        rectangle(mat, faceRect, Scalar(255, 155, 144), 8);
 
-        mat2Bitmap(env,mat,bitmap);
+        mat2Bitmap(env, mat, bitmap);
 
         //保存人脸信息Mat，保存成 图片 jpg
-        Mat fact_info_mat(equalize_mat,faceRect);
+        Mat fact_info_mat(equalize_mat, faceRect);
 
         //todo 将fact_info_mat保存成图片
     }
@@ -127,3 +127,46 @@ Java_com_cnting_opencv_FaceDetection_faceDetectionSaveInfo(JNIEnv *env, jobject 
 }
 
 
+/**
+ * https://www.bilibili.com/video/BV1Ay4y117HV?p=213&spm_id_from=pageDriver&vd_source=cfa545ca14ba2d7782dd4c30ae22638e
+ */
+extern "C"
+JNIEXPORT int JNICALL
+Java_com_cnting_opencv_BitmapUtil_gray3(JNIEnv *env, jobject thiz, jobject src) {
+    AndroidBitmapInfo bitmapInfo;
+    int info_res = AndroidBitmap_getInfo(env, src, &bitmapInfo);
+    if (info_res != 0) return -1;
+    void *pixels;
+    AndroidBitmap_lockPixels(env, src, &pixels);
+
+    if (bitmapInfo.format == ANDROID_BITMAP_FORMAT_RGBA_8888) {
+        for (int i = 0; i < bitmapInfo.width * bitmapInfo.height; ++i) {
+            uint32_t *pixel_p = reinterpret_cast<uint32_t *>(pixels) + i;
+            uint32_t pixel = *pixel_p;
+            int a = (pixel >> 24) & 0xff;
+            int r = (pixel >> 16) & 0xff;
+            int g = (pixel >> 8) & 0xff;
+            int b = pixel & 0xff;
+            int gray = (int) (0.213f * r + 0.715f * g + 0.072f * b);
+            *pixel_p = (a << 24) | (gray << 16) | (gray << 8) | gray;
+
+        }
+    } else { //RGB_565，R占5位，G占6位，B占5位
+        for (int i = 0; i < bitmapInfo.width * bitmapInfo.height; ++i) {
+            uint16_t *pixel_p = reinterpret_cast<uint16_t *>(pixels) + i;
+            uint16_t pixel = *pixel_p;
+            int r = ((pixel >> 11) & 0x1f) << 3;  //5位
+            int g = ((pixel >> 5) & 0x3f) << 2;   //6位
+            int b = (pixel & 0x1f) << 3;          //5位
+
+            //上面((pixel >> 11) & 0x1f)是按5位来算的
+            //但这个方法是按8位来算的，所以上面方法需要<<3补足8位
+            int gray = (int) (0.213f * r + 0.715f * g + 0.072f * b);
+
+            *pixel_p = ((gray >> 3) << 11) | ((gray >> 2) << 5) | (gray >> 3);
+        }
+    }
+
+    AndroidBitmap_unlockPixels(env, src);
+    return 1;
+}

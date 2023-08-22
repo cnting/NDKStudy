@@ -1,6 +1,6 @@
 * [下载地址](https://github.com/opencv/opencv/releases/tag/4.8.0)
 * [配置](https://juejin.cn/post/6844903906099593229)
-
+* [sample导入](https://blog.csdn.net/lucky_tom/article/details/113247850)
 #### 人脸识别实现思路
 1. 人脸信息录入
     * 获取相机Bitmap，检测人脸（保证人脸特征信息比较精准）人脸要足够大，当前范围内只有一张人脸，，正常、眨眼睛、张嘴巴（3张人脸信息）
