@@ -23,6 +23,7 @@
         </activity>
         <activity android:name=".FactDetectionActivity" />
         <activity android:name=".FilterActivity" />
+        <activity android:name=".SpecialEffectActivity" />
     </application>
 
 </manifest>

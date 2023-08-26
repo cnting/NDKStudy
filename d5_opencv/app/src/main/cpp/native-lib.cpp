@@ -3,76 +3,12 @@
 #include <android/bitmap.h>
 #include "opencv2/opencv.hpp"
 #include "android/log.h"
+#include "bitmap_utils.h"
 
 #define TAG "JNI_TAG"
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR,TAG,__VA_ARGS__)
 
 using namespace cv;
-
-void bitmap2Mat(JNIEnv *env, Mat &mat, jobject bitmap) {
-    //Mat的type：CV_8UC4 ==> ARGB_8888，CV_8UC2 ==> ARGB_565
-    //1.获取bitmap信息
-    AndroidBitmapInfo info;
-    AndroidBitmap_getInfo(env, bitmap, &info);
-    void *pixels;
-
-    //锁定bitmap画布
-    AndroidBitmap_lockPixels(env, bitmap, &pixels);
-    //指定mat的宽高和type，mat中是 BGRA
-    mat.create(info.height, info.width, CV_8UC4);
-
-    if (info.format == ANDROID_BITMAP_FORMAT_RGBA_8888) {
-        //对应的type是CV_8UC4
-        Mat temp(info.height, info.width, CV_8UC4, pixels);
-        //把数据temp复制到mat
-        temp.copyTo(mat);
-    } else if (info.format == ANDROID_BITMAP_FORMAT_RGB_565) {
-        //对应的type是CV_8UC2
-        Mat temp(info.height, info.width, CV_8UC2, pixels);
-        //bitmap是RGB_565，mat是BGRA的，所以要用下面方式转
-        cvtColor(temp, mat, COLOR_BGR5652BGRA);
-    }
-    //其他format要自己转
-
-    //解锁Bitmap画布
-    AndroidBitmap_unlockPixels(env, bitmap);
-}
-
-void mat2Bitmap(JNIEnv *env, const Mat &mat, jobject bitmap) {
-    //1.获取bitmap信息
-    AndroidBitmapInfo info;
-    AndroidBitmap_getInfo(env, bitmap, &info);
-    void *pixels;
-
-    //锁定bitmap画布
-    AndroidBitmap_lockPixels(env, bitmap, &pixels);
-
-    if (info.format == ANDROID_BITMAP_FORMAT_RGBA_8888) {
-        //对应的type是CV_8UC4
-        Mat temp(info.height, info.width, CV_8UC4, pixels);
-        if (mat.type() == CV_8UC4) {
-            mat.copyTo(temp);
-        } else if (mat.type() == CV_8UC2) {
-            cvtColor(mat, temp, COLOR_BGR5652BGRA);
-        } else if (mat.type() == CV_8UC1) { //灰度mat
-            cvtColor(mat, temp, COLOR_GRAY2BGRA);
-        }
-    } else if (info.format == ANDROID_BITMAP_FORMAT_RGB_565) {
-        //对应的type是CV_8UC2
-        Mat temp(info.height, info.width, CV_8UC2, pixels);
-        if (mat.type() == CV_8UC4) {
-            cvtColor(mat, temp, COLOR_RGBA2BGR565);
-        } else if (mat.type() == CV_8UC2) {
-            mat.copyTo(temp);
-        } else if (mat.type() == CV_8UC1) { //灰度mat
-            cvtColor(mat, temp, COLOR_GRAY2BGR565);
-        }
-    }
-    //其他format要自己转
-
-    //解锁Bitmap画布
-    AndroidBitmap_unlockPixels(env, bitmap);
-}
 
 /**
  * 加载人脸识别的分类器文件
@@ -169,4 +105,127 @@ Java_com_cnting_opencv_BitmapUtil_gray3(JNIEnv *env, jobject thiz, jobject src) 
 
     AndroidBitmap_unlockPixels(env, src);
     return 1;
+}
+/**
+ * 逆世界
+ */
+extern "C"
+JNIEXPORT jobject JNICALL
+Java_com_cnting_opencv_BitmapUtil_inverseWorld(JNIEnv *env, jobject thiz, jobject bitmap) {
+    Mat src;
+    bitmap2Mat(env, src, bitmap);
+
+    Mat res(src.size(), src.type());
+
+    int src_w = src.cols;
+    int src_h = src.rows;
+    int mid_h = src_h >> 1;
+    int a_h = mid_h >> 1;
+    //处理下半部分
+    for (int row = 0; row < mid_h; row++) {
+        for (int col = 0; col < src_w; col++) {
+            //现在type是BGRA，所以用Vec4b接收；如果type是BGR，就要用Vec3b接收
+            res.at<Vec4b>(row + mid_h, col) = src.at<Vec4b>(row + a_h, col);
+        }
+    }
+    for (int row = 0; row < mid_h; row++) {
+        for (int col = 0; col < src_w; col++) {
+            res.at<Vec4b>(row, col) = src.at<Vec4b>(src_h - a_h - row, col);
+        }
+    }
+    mat2Bitmap(env, res, bitmap);
+    return bitmap;
+}
+/**
+ * 镜像
+ */
+extern "C"
+JNIEXPORT jobject JNICALL
+Java_com_cnting_opencv_BitmapUtil_mirror(JNIEnv *env, jobject thiz, jobject bitmap) {
+    Mat src;
+    bitmap2Mat(env, src, bitmap);
+
+    Mat res(src.size(), src.type());
+
+    int src_w = src.cols;
+    int src_h = src.rows;
+    int mid_w = src_w >> 1;
+    int a_w = mid_w >> 1;
+    for (int row = 0; row < src_h; row++) {
+        for (int col = 0; col < mid_w; col++) {
+            res.at<Vec4b>(row, col + mid_w) = src.at<Vec4b>(row, col + a_w);
+        }
+    }
+    for (int row = 0; row < src_h; row++) {
+        for (int col = 0; col < mid_w; col++) {
+            res.at<Vec4b>(row, col) = src.at<Vec4b>(row, src_w - a_w - col);
+        }
+    }
+    mat2Bitmap(env, res, bitmap);
+    return bitmap;
+}
+/**
+ * 浮雕效果
+ * 有立体感，突出轮廓信息，使用下面算子来做卷积
+ * [1,0
+ * 0,-1]
+ * 这个算子相当于左上角的像素减右下角的像素
+ */
+extern "C"
+JNIEXPORT jobject JNICALL
+Java_com_cnting_opencv_BitmapUtil_anaglyph(JNIEnv *env, jobject thiz, jobject bitmap) {
+    Mat src;
+    bitmap2Mat(env, src, bitmap);
+
+    cvtColor(src, src, COLOR_BGRA2GRAY);
+
+    Mat res(src.size(), src.type());
+
+    int src_w = src.cols;
+    int src_h = src.rows;
+    for (int row = 0; row < src_h - 1; row++) {
+        for (int col = 0; col < src_w - 1; col++) {
+            //左上角像素
+            Vec4b current = src.at<Vec4b>(row, col);
+            //右下角像素
+            Vec4b next = src.at<Vec4b>(row + 1, col + 1);
+            //浮雕效果要加128
+            res.at<Vec4b>(row, col)[0] = saturate_cast<uchar>(current[0] - next[0] + 128);
+            res.at<Vec4b>(row, col)[1] = saturate_cast<uchar>(current[1] - next[1] + 128);
+            res.at<Vec4b>(row, col)[2] = saturate_cast<uchar>(current[2] - next[1] + 128);
+            res.at<Vec4b>(row, col)[3] = current[3];
+        }
+    }
+    mat2Bitmap(env, res, bitmap);
+    return bitmap;
+}
+extern "C"
+JNIEXPORT jobject JNICALL
+Java_com_cnting_opencv_BitmapUtil_mosaic(JNIEnv *env, jobject thiz, jobject bitmap) {
+    Mat src;
+    bitmap2Mat(env, src, bitmap);
+
+    int src_w = src.cols;
+    int src_h = src.rows;
+
+    //省略人脸识别，只对人脸位置打马赛克，假设下面区域是人脸
+    int row_s = src_h >> 2;
+    int row_e = src_h * 3 / 4;
+    int col_s = src_w >> 2;
+    int col_e = src_w * 3 / 4;
+    //马赛克大小
+    int size = 30;
+
+    for (int row = row_s; row < row_e; row += size) {
+        for (int col = col_s; col < col_e; col += size) {
+            int pixel = src.at<int>(row, col);
+            for (int m_rows = 1; m_rows < size; m_rows++) {
+                for (int m_cols = 1; m_cols < size; m_cols++) {
+                    src.at<int>(row + m_rows, col + m_cols) = pixel;
+                }
+            }
+        }
+    }
+    mat2Bitmap(env, src, bitmap);
+    return bitmap;
 }

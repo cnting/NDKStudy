@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <com.google.android.flexbox.FlexboxLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <Button
+            android:id="@+id/inverseWorldBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="逆世界" />
+
+        <Button
+            android:id="@+id/mirrorBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="镜像" />
+        <Button
+            android:id="@+id/anaglyphBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="浮雕" />
+        <Button
+            android:id="@+id/mosaicBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="马赛克" />
+    </com.google.android.flexbox.FlexboxLayout>
+
+    <ImageView
+        android:src="@drawable/a"
+        android:id="@+id/specialEffectImg"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+</LinearLayout>

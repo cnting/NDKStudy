@@ -13,18 +13,16 @@ extern "C" {
  * @param env JNI环境
  * @param bitmap Bitmap对象
  * @param mat 图片矩阵
- * @param needPremultiplyAlpha 是否前乘透明度
  */
-void bitmap2Mat(JNIEnv *env, jobject bitmap, Mat *mat, bool needPremultiplyAlpha = false);
+void bitmap2Mat(JNIEnv *env, Mat &mat, jobject &bitmap);
 
 /**
  * 矩阵转Bitmap
  * @param env JNI环境
  * @param mat 图片矩阵
  * @param bitmap Bitmap对象
- * @param needPremultiplyAlpha 是否前乘透明度
  */
-void mat2Bitmap(JNIEnv *env, Mat mat, jobject bitmap, bool needPremultiplyAlpha = false);
+void mat2Bitmap(JNIEnv *env, const Mat &mat, jobject &bitmap);
 
 /**
  *
@@ -34,7 +32,7 @@ void mat2Bitmap(JNIEnv *env, Mat mat, jobject bitmap, bool needPremultiplyAlpha 
  * @param config Bitmap配置
  * @return Bitmap对象
  */
-jobject createBitmap(JNIEnv *env, Mat src, jobject config);
+jobject createBitmap(JNIEnv *env, Mat &src, jobject config);
 }
 
 #endif //REC_UTILS_H

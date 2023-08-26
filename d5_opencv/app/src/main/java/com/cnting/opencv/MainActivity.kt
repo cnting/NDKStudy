@@ -30,6 +30,9 @@ class MainActivity : AppCompatActivity() {
         binding.filterBtn.setOnClickListener {
             startActivity(Intent(this, FilterActivity::class.java))
         }
+        binding.specialEffectBtn.setOnClickListener {
+            startActivity(Intent(this,SpecialEffectActivity::class.java))
+        }
     }
 
     companion object {

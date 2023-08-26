@@ -55,6 +55,26 @@ object BitmapUtil {
     /**
      * 在native层操作Bitmap
      */
-    external fun gray3(src:Bitmap):Int
+    external fun gray3(src: Bitmap): Int
+
+    /**
+     * 逆世界
+     */
+    external fun inverseWorld(bitmap: Bitmap): Bitmap
+
+    /**
+     * 镜像
+     */
+    external fun mirror(bitmap: Bitmap): Bitmap
+
+    /**
+     * 浮雕
+     */
+    external fun anaglyph(bitmap: Bitmap): Bitmap
+
+    /**
+     * 马赛克
+     */
+    external fun mosaic(bitmap: Bitmap): Bitmap
 
 }
