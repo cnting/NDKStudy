@@ -32,7 +32,7 @@ void mat2Bitmap(JNIEnv *env, const Mat &mat, jobject &bitmap);
  * @param config Bitmap配置
  * @return Bitmap对象
  */
-jobject createBitmap(JNIEnv *env, Mat &src, jobject config);
+jobject createBitmap(JNIEnv *env, int w,int h, int type);
 }
 
 #endif //REC_UTILS_H

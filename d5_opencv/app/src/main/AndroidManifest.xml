@@ -24,6 +24,7 @@
         <activity android:name=".FactDetectionActivity" />
         <activity android:name=".FilterActivity" />
         <activity android:name=".SpecialEffectActivity" />
+        <activity android:name=".TransformActivity" />
     </application>
 
 </manifest>

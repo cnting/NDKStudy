@@ -65,13 +65,24 @@ void mat2Bitmap(JNIEnv *env, const Mat &mat, jobject &bitmap) {
     AndroidBitmap_unlockPixels(env, bitmap);
 }
 
-jobject createBitmap(JNIEnv *env, Mat &src, jobject config) {
-    jclass java_bitmap_class = (jclass) env->FindClass("android/graphics/Bitmap");//类名
-    jmethodID mid = env->GetStaticMethodID(java_bitmap_class, "createBitmap",//获取方法
-                                           "(IILandroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap;");
-    jobject bitmap = env->CallStaticObjectMethod(java_bitmap_class, mid, src.cols, src.rows,
+jobject createBitmap(JNIEnv *env, int w, int h, int type) {
+    char *config_name;
+    if (type == CV_8UC4) {
+        config_name = "ARGB_8888";
+    } else {
+        config_name = "RGB_565";
+    }
+    jstring config_name_str = env->NewStringUTF(config_name);
+    jclass java_bitmap_config_class = env->FindClass("android/graphics/Bitmap$Config");
+    jmethodID mid = env->GetStaticMethodID(java_bitmap_config_class, "valueOf",
+                                           "(Ljava/lang/String;)Landroid/graphics/Bitmap$Config;");
+    jobject config = env->CallStaticObjectMethod(java_bitmap_config_class, mid, config_name_str);
+
+    jclass java_bitmap_class = env->FindClass("android/graphics/Bitmap");//类名
+    mid = env->GetStaticMethodID(java_bitmap_class, "createBitmap",//获取方法
+                                 "(IILandroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap;");
+    jobject bitmap = env->CallStaticObjectMethod(java_bitmap_class, mid, w, h,
                                                  config);
-    mat2Bitmap(env, src, bitmap);
     return bitmap;
 }
 

@@ -35,5 +35,15 @@ class SpecialEffectActivity : AppCompatActivity() {
             val res = BitmapUtil.mosaic(bitmap)
             binding.specialEffectImg.setImageBitmap(res)
         }
+        binding.groundGlassBtn.setOnClickListener {
+            val bitmap = BitmapFactory.decodeResource(resources, R.drawable.a)
+            val res = BitmapUtil.groundGlass(bitmap)
+            binding.specialEffectImg.setImageBitmap(res)
+        }
+        binding.oilPaintingBtn.setOnClickListener {
+            val bitmap = BitmapFactory.decodeResource(resources, R.drawable.a)
+            val res = BitmapUtil.oilPainting(bitmap)
+            binding.specialEffectImg.setImageBitmap(res)
+        }
     }
 }

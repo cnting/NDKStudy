@@ -33,6 +33,9 @@ class MainActivity : AppCompatActivity() {
         binding.specialEffectBtn.setOnClickListener {
             startActivity(Intent(this,SpecialEffectActivity::class.java))
         }
+        binding.transformBtn.setOnClickListener {
+            startActivity(Intent(this,TransformActivity::class.java))
+        }
     }
 
     companion object {

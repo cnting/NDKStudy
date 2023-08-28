@@ -1,51 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical">
 
     <com.google.android.flexbox.FlexboxLayout
         android:layout_width="match_parent"
-        app:flexWrap="wrap"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        app:flexWrap="wrap">
 
         <Button
-            android:id="@+id/inverseWorldBtn"
+            android:id="@+id/rotationBtn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="逆世界" />
+            android:text="旋转" />
 
         <Button
-            android:id="@+id/mirrorBtn"
+            android:id="@+id/warpAffineBtn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="镜像" />
+            android:text="仿射变换" />
+
         <Button
-            android:id="@+id/anaglyphBtn"
+            android:id="@+id/resizeBtn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="浮雕" />
+            android:text="缩放resize" />
+
         <Button
-            android:id="@+id/mosaicBtn"
+            android:id="@+id/remapBtn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="马赛克" />
-        <Button
-            android:id="@+id/groundGlassBtn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="毛玻璃" />
-        <Button
-            android:id="@+id/oilPaintingBtn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="油画(慢)" />
+            android:text="重映射remap" />
+
     </com.google.android.flexbox.FlexboxLayout>
 
     <ImageView
-        android:src="@drawable/a"
         android:id="@+id/specialEffectImg"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:src="@drawable/a" />
 </LinearLayout>

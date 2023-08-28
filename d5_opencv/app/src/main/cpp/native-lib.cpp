@@ -229,3 +229,194 @@ Java_com_cnting_opencv_BitmapUtil_mosaic(JNIEnv *env, jobject thiz, jobject bitm
     mat2Bitmap(env, src, bitmap);
     return bitmap;
 }
+/**
+ * 毛玻璃，高斯模糊也算毛玻璃
+ * 毛玻璃其实是对某个区域随机取像素
+ */
+extern "C"
+JNIEXPORT jobject JNICALL
+Java_com_cnting_opencv_BitmapUtil_groundGlass(JNIEnv *env, jobject thiz, jobject bitmap) {
+    Mat src;
+    bitmap2Mat(env, src, bitmap);
+
+    int src_w = src.cols;
+    int src_h = src.rows;
+    int size = 8;
+    RNG rng(time(NULL));
+    for (int row = 0; row < src_h - size; row++) {
+        for (int col = 0; col < src_w - size; col++) {
+            int random = rng.uniform(0, size);
+            src.at<int>(row, col) = src.at<int>(row + random, col + random);
+        }
+    }
+    mat2Bitmap(env, src, bitmap);
+    return bitmap;
+}
+/**
+ * 油画
+ * 1.每个点分成n*n小块
+ * 2.统计灰度等级
+ * 3.选灰度等级最多的值
+ * 4.找到所有像素取平均值
+ *
+ * 位移 > +- > *和/ > 整型 > float
+ */
+extern "C"
+JNIEXPORT jobject JNICALL
+Java_com_cnting_opencv_BitmapUtil_oilPainting(JNIEnv *env, jobject thiz, jobject bitmap) {
+    Mat src;
+    bitmap2Mat(env, src, bitmap);
+    Mat gray;
+    cvtColor(src, gray, COLOR_BGRA2GRAY);
+    Mat result(src.size(), src.type());
+
+    int src_w = src.cols;
+    int src_h = src.rows;
+    int size = 8;
+    for (int row = 0; row < src_h - size; row++) {
+        for (int col = 0; col < src_w - size; col++) {
+            //统计8*8小块里的每个灰度值
+            int grayArr[8] = {0}, b_g[8] = {0}, g_g[8] = {0}, r_g[8] = {0};
+            for (int i = 0; i < size; i++) {
+                for (int j = 0; j < size; j++) {
+                    uchar g = gray.at<uchar>(row + i, col + j);
+                    uchar index = g / (254 / 7);
+                    grayArr[index]++;
+                    //等级的像素值之和
+                    b_g[index] += src.at<Vec4b>(row + i, col + j)[0];
+                    g_g[index] += src.at<Vec4b>(row + i, col + j)[1];
+                    r_g[index] += src.at<Vec4b>(row + i, col + j)[2];
+                }
+            }
+            //找最大的灰度值下标
+            int max_index = 0;
+            int max = grayArr[max_index];
+            for (int i = 1; i < size; i++) {
+                if (grayArr[max_index] < grayArr[i]) {
+                    max_index = i;
+                    max = grayArr[i];
+                }
+            }
+            result.at<Vec4b>(row, col)[0] = b_g[max_index] / max;
+            result.at<Vec4b>(row, col)[1] = g_g[max_index] / max;
+            result.at<Vec4b>(row, col)[2] = r_g[max_index] / max;
+            result.at<Vec4b>(row, col)[3] = src.at<Vec4b>(row, col)[3];
+        }
+    }
+    mat2Bitmap(env, result, bitmap);
+    return bitmap;
+}
+extern "C"
+JNIEXPORT jobject JNICALL
+Java_com_cnting_opencv_BitmapUtil_rotation(JNIEnv *env, jobject thiz, jobject bitmap) {
+    Mat src;
+    bitmap2Mat(env, src, bitmap);
+    int res_w = src.rows;
+    int res_h = src.cols;
+    Mat res(res_h, res_w, src.type());
+    for (int row = 0; row < res_h; row++) {
+        for (int col = 0; col < res_w; col++) {
+            int src_row = src.rows - col;
+            int src_col = row;
+            res.at<int>(row, col) = src.at<int>(src_row, src_col);
+        }
+    }
+    jobject newBitmap = createBitmap(env, res_w, res_h, CV_8UC4);
+    mat2Bitmap(env, res, newBitmap);
+    return newBitmap;
+}
+/**
+ * 仿射变换
+ * https://www.cnblogs.com/bjxqmy/p/12337581.html
+ */
+extern "C"
+JNIEXPORT jobject JNICALL
+Java_com_cnting_opencv_BitmapUtil_warpAffine(JNIEnv *env, jobject thiz, jobject bitmap) {
+    Mat src;
+    bitmap2Mat(env, src, bitmap);
+    Mat res(src.size(), src.type());
+    /**
+     * 指定矩阵，必须传入2*3矩阵
+     * [a0,a1,a2]
+     * [b0,b1,b2]
+     * 但要看成两个矩阵:
+     * [a0,a1]    [a2]   =>  [a0,a1] * [x]+ [a2] = a0*x + a1*y + a2
+     * [b0,b1]    [b2]       [b0,b1] * [y]  [b2] = b0*x + b1*y + b2
+     */
+//    Mat M(2, 3, CV_32FC1);
+//    M.at<float>(0, 0) = 0.5;  //a0
+//    M.at<float>(0, 1) = 0;  //a1
+//    M.at<float>(0, 2) = 0; //a2
+//    M.at<float>(1, 0) = 0;
+//    M.at<float>(1, 1) = 0.5;
+//    M.at<float>(1, 2) = 0;
+
+    //系统提供了一些方法
+    Point2f center(src.cols / 2, src.rows / 2);
+    Mat M = getRotationMatrix2D(center, 45, 1);
+
+    warpAffine(src, res, M, src.size());
+    mat2Bitmap(env, res, bitmap);
+    return bitmap;
+}
+extern "C"
+JNIEXPORT jobject JNICALL
+Java_com_cnting_opencv_BitmapUtil_resize(JNIEnv *env, jobject thiz, jobject bitmap, jint width,
+                                         jint height) {
+    Mat src;
+    bitmap2Mat(env, src, bitmap);
+
+    int src_w = src.cols;
+    int src_h = src.rows;
+
+    Mat res(height, width, src.type());
+
+    for (int row = 0; row < res.rows; row++) {
+        for (int col = 0; col < res.cols; col++) {
+            float src_row = row * (src_h * 1.0 / height);
+            float src_col = col * (src_w * 1.0 / width);
+            Vec4f pixels = src.at<Vec4f>(src_row, src_col);
+            res.at<Vec4f>(row, col) = pixels;
+        }
+    }
+    jobject newBitmap = createBitmap(env, width, height, src.type());
+    mat2Bitmap(env, res, newBitmap);
+    return newBitmap;
+}
+
+/**
+ * 重映射
+ */
+void remap1(Mat &src, Mat &res, Mat &matX, Mat &matY) {
+    res.create(src.size(), src.type());
+    int res_w = res.cols;
+    int res_h = res.rows;
+    for (int row = 0; row < res_h; row++) {
+        for (int col = 0; col < res_w; col++) {
+            int x = matX.at<float>(row, col);
+            int y = matY.at<float>(row, col);
+            res.at<Vec4b>(row, col) = src.at<Vec4b>(y, x);
+        }
+    }
+}
+
+extern "C"
+JNIEXPORT jobject JNICALL
+Java_com_cnting_opencv_BitmapUtil_remap(JNIEnv *env, jobject thiz, jobject bitmap) {
+    Mat src;
+    bitmap2Mat(env, src, bitmap);
+    Mat res;
+    Mat matX(src.size(), CV_32FC1);
+    Mat matY(src.size(), CV_32FC1);
+    for (int row = 0; row < src.rows; row++) {
+        for (int col = 0; col < src.cols; col++) {
+            matX.at<float>(row, col) = col;
+            matY.at<float>(row, col) = src.rows - row;
+        }
+    }
+
+//    remap(src, res, matX, matY, 0);
+    remap1(src, res, matX, matY);  //自己实现下
+    mat2Bitmap(env, res, bitmap);
+    return bitmap;
+}

@@ -77,4 +77,35 @@ object BitmapUtil {
      */
     external fun mosaic(bitmap: Bitmap): Bitmap
 
+    /**
+     * 毛玻璃
+     */
+    external fun groundGlass(bitmap: Bitmap): Bitmap
+
+    /**
+     * 油画
+     */
+    external fun oilPainting(bitmap: Bitmap): Bitmap
+
+    /**
+     * 旋转
+     */
+    external fun rotation(bitmap: Bitmap): Bitmap
+
+    /**
+     * 仿射变换，实现一些简单的重映射
+     */
+    external fun warpAffine(bitmap: Bitmap): Bitmap
+
+    /**
+     * 缩放
+     */
+    external fun resize(bitmap: Bitmap, width: Int, height: Int): Bitmap
+
+    /**
+     * 重映射
+     */
+    external fun remap(bitmap: Bitmap): Bitmap
+
+
 }
