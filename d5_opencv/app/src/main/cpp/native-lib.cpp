@@ -23,18 +23,10 @@ Java_com_cnting_opencv_FaceDetection_loadCascade(JNIEnv *env, jobject thiz, jstr
     env->ReleaseStringUTFChars(file_path, filePath);
 }
 
-extern "C"
-JNIEXPORT jint JNICALL
-Java_com_cnting_opencv_FaceDetection_faceDetectionSaveInfo(JNIEnv *env, jobject thiz,
-                                                           jobject bitmap) {
-    //检测人脸，opencv只会处理Mat，不会处理Bitmap，所以要先将Bitmap转Mat
-    //1.Bitmap 转 Mat，Mat是个矩阵
-    Mat mat;
-    bitmap2Mat(env, mat, bitmap);
-
+void faceDetect(JNIEnv *env, Mat &src) {
     //处理灰度，提高效率，一般所有操作都会进行灰度处理
     Mat gray_mat;
-    cvtColor(mat, gray_mat, COLOR_BGRA2GRAY);
+    cvtColor(src, gray_mat, COLOR_BGRA2GRAY);
 
     //再次处理 直方均衡补偿
     Mat equalize_mat;
@@ -49,19 +41,30 @@ Java_com_cnting_opencv_FaceDetection_faceDetectionSaveInfo(JNIEnv *env, jobject 
         Rect faceRect = faces[0];
 
         //在人脸部位画个图
-        rectangle(mat, faceRect, Scalar(255, 155, 144), 8);
-
-        mat2Bitmap(env, mat, bitmap);
-
-        //保存人脸信息Mat，保存成 图片 jpg
-        Mat fact_info_mat(equalize_mat, faceRect);
-
-        //todo 将fact_info_mat保存成图片
+        rectangle(src, faceRect, Scalar(255, 155, 144), 8, LINE_AA);
     }
+}
 
+extern "C"
+JNIEXPORT jint JNICALL
+Java_com_cnting_opencv_FaceDetection_faceDetectionBitmap(JNIEnv *env, jobject thiz,
+                                                         jobject bitmap) {
+    //检测人脸，opencv只会处理Mat，不会处理Bitmap，所以要先将Bitmap转Mat
+    //1.Bitmap 转 Mat，Mat是个矩阵
+    Mat mat;
+    bitmap2Mat(env, mat, bitmap);
+    faceDetect(env, mat);
+    mat2Bitmap(env, mat, bitmap);
     return 0;
 }
 
+extern "C"
+JNIEXPORT jint JNICALL
+Java_com_cnting_opencv_FaceDetection_faceDetection(JNIEnv *env, jobject thiz, jlong mat_ptr) {
+    Mat *src = reinterpret_cast<Mat *> (mat_ptr);
+    faceDetect(env, *src);
+    return 0;
+}
 
 /**
  * https://www.bilibili.com/video/BV1Ay4y117HV?p=213&spm_id_from=pageDriver&vd_source=cfa545ca14ba2d7782dd4c30ae22638e
@@ -419,4 +422,55 @@ Java_com_cnting_opencv_BitmapUtil_remap(JNIEnv *env, jobject thiz, jobject bitma
     remap1(src, res, matX, matY);  //自己实现下
     mat2Bitmap(env, res, bitmap);
     return bitmap;
+}
+/**
+ * 行人检测
+ */
+extern "C"
+JNIEXPORT jobject JNICALL
+Java_com_cnting_opencv_ObjDetectUtil_hogBitmap(JNIEnv *env, jobject thiz, jobject bitmap) {
+    Mat src;
+    bitmap2Mat(env, src, bitmap);
+    Mat bgr;
+    cvtColor(src, bgr, COLOR_BGRA2BGR);
+
+    HOGDescriptor hogDescriptor;
+    hogDescriptor.setSVMDetector(hogDescriptor.getDefaultPeopleDetector());
+    std::vector<Rect> foundLocations;
+    hogDescriptor.detectMultiScale(bgr, foundLocations, 0, Size(8, 8));
+
+    for (int i = 0; i < foundLocations.size(); i++) {
+        rectangle(src, foundLocations[i], Scalar(255, 0, 0), 2, LINE_AA);
+    }
+    mat2Bitmap(env, src, bitmap);
+    return bitmap;
+}
+extern "C"
+JNIEXPORT jobject JNICALL
+Java_com_cnting_opencv_ObjDetectUtil_lbpBitmap(JNIEnv *env, jobject thiz, jobject bitmap) {
+    Mat src;
+    bitmap2Mat(env, src, bitmap);
+    Mat gray;
+    cvtColor(src, gray, COLOR_BGRA2GRAY);
+    Mat result = Mat::zeros(Size(src.cols - 2, src.rows - 2), CV_8UC1);
+    for (int row = 1; row < gray.rows - 1; row++) {
+        for (int col = 1; col < gray.cols - 1; col++) {
+            uchar pixels = gray.at<uchar>(row, col);
+            int rPixels = 0;
+            rPixels |= (pixels >= gray.at<uchar>(row - 1, col - 1)) << 0;
+            rPixels |= (pixels >= gray.at<uchar>(row - 1, col)) << 1;
+            rPixels |= (pixels >= gray.at<uchar>(row - 1, col + 1)) << 2;
+            rPixels |= (pixels >= gray.at<uchar>(row, col + 1)) << 3;
+            rPixels |= (pixels >= gray.at<uchar>(row + 1, col + 1)) << 4;
+            rPixels |= (pixels >= gray.at<uchar>(row, col + 1)) << 5;
+            rPixels |= (pixels >= gray.at<uchar>(row - 1, col + 1)) << 6;
+            rPixels |= (pixels >= gray.at<uchar>(row, col - 1)) << 7;
+
+            result.at<uchar>(row - 1, col - 1) = rPixels;
+        }
+    }
+
+    jobject resBitmap = createBitmap(env, result.cols, result.rows, src.type());
+    mat2Bitmap(env, result, resBitmap);
+    return resBitmap;
 }

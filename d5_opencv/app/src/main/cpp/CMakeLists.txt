@@ -13,7 +13,7 @@ add_library( # Sets the name of the library.
         SHARED
 
         # Provides a relative path to your source file(s).
-        native-lib.cpp bitmap_utils.cpp)
+        native-lib.cpp bitmap_utils.cpp NativeMat.cpp NativeUtil.cpp)
 
 #添加动态链接库
 add_library(lib_opencv SHARED IMPORTED)

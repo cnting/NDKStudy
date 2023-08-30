@@ -12,36 +12,30 @@
         android:id="@+id/faceBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="人脸识别"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/image" />
+        android:text="人脸识别" />
 
     <Button
         android:id="@+id/filterBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="滤镜"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/image" />
+        android:text="滤镜" />
 
     <Button
         android:id="@+id/specialEffectBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="特效"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/image" />
+        android:text="特效" />
 
     <Button
         android:id="@+id/transformBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="几何变换"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/image" />
+        android:text="几何变换" />
+
+    <Button
+        android:id="@+id/detectBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="物体检测" />
 
 </LinearLayout>

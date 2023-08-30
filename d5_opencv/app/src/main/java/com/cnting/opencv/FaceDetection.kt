@@ -7,12 +7,13 @@ import android.graphics.Bitmap
  *
  */
 class FaceDetection {
-    external fun faceDetectionSaveInfo(bitmap: Bitmap): Int
+    external fun faceDetectionBitmap(bitmap: Bitmap): Int
+    external fun faceDetection(matPtr: Long): Int
 
     /**
      * 加载人脸识别的分类器文件
      */
-    external fun loadCascade(filePath:String)
+    external fun loadCascade(filePath: String)
 
 
 }

@@ -1,5 +1,6 @@
 * [下载地址](https://github.com/opencv/opencv/releases/tag/4.8.0)
 * [配置](https://juejin.cn/post/6844903906099593229)
+* [Android Studio集成OpenCV](https://www.jianshu.com/p/41d1effd630e)
 * [sample导入](https://blog.csdn.net/lucky_tom/article/details/113247850)
 #### 人脸识别实现思路
 1. 人脸信息录入

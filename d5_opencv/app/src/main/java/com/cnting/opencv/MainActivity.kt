@@ -1,15 +1,10 @@
 package com.cnting.opencv
 
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.os.Bundle
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.cnting.opencv.databinding.ActivityMainBinding
 import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
 
 
 class MainActivity : AppCompatActivity() {
@@ -25,7 +20,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         binding.faceBtn.setOnClickListener {
-            startActivity(Intent(this, FactDetectionActivity::class.java))
+            startActivity(Intent(this, FaceDetectionActivity::class.java))
         }
         binding.filterBtn.setOnClickListener {
             startActivity(Intent(this, FilterActivity::class.java))
@@ -35,6 +30,9 @@ class MainActivity : AppCompatActivity() {
         }
         binding.transformBtn.setOnClickListener {
             startActivity(Intent(this,TransformActivity::class.java))
+        }
+        binding.detectBtn.setOnClickListener {
+            startActivity(Intent(this,ObjDetectActivity::class.java))
         }
     }
 
