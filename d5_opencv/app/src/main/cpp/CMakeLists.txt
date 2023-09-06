@@ -13,7 +13,7 @@ add_library( # Sets the name of the library.
         SHARED
 
         # Provides a relative path to your source file(s).
-        native-lib.cpp bitmap_utils.cpp NativeMat.cpp NativeUtil.cpp)
+        native-lib.cpp bitmap_utils.cpp)
 
 #添加动态链接库
 add_library(lib_opencv SHARED IMPORTED)
@@ -35,5 +35,6 @@ find_library(jnigraphics-lib jnigraphics)
 target_link_libraries( # Specifies the target library.
         opencv
         lib_opencv
+#        -lopencv_face
         ${jnigraphics-lib}
         ${log-lib})

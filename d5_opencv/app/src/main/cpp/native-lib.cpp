@@ -2,6 +2,7 @@
 #include <string>
 #include <android/bitmap.h>
 #include "opencv2/opencv.hpp"
+#include "opencv2/face.hpp"
 #include "android/log.h"
 #include "bitmap_utils.h"
 
@@ -9,11 +10,14 @@
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR,TAG,__VA_ARGS__)
 
 using namespace cv;
+using namespace cv::face;
 
+//todo 这里报错 人脸识别未完成
+Ptr<BasicFaceRecognizer> model = EigenFaceRecognizer::create(1.05);
+CascadeClassifier cascadeClassifier;
 /**
  * 加载人脸识别的分类器文件
  */
-CascadeClassifier cascadeClassifier;
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_cnting_opencv_FaceDetection_loadCascade(JNIEnv *env, jobject thiz, jstring file_path) {
@@ -32,9 +36,12 @@ void faceDetect(JNIEnv *env, Mat &src) {
     Mat equalize_mat;
     equalizeHist(gray_mat, equalize_mat);
 
-    //识别人脸，要加载人脸分类器文件
+    //人脸检测，要加载人脸分类器文件
     std::vector<Rect> faces;
-    cascadeClassifier.detectMultiScale(equalize_mat, faces, 1.1, 5);
+    //scaleFactor:每次检测缩放比例
+    //minNeighbors:检测次数
+    cascadeClassifier.detectMultiScale(equalize_mat, faces, 1.1, 5, 0,
+                                       Size(src.cols / 2, src.rows / 2));
     LOGE("人脸个数:%d", faces.size());
     if (faces.size() == 1) {
         //拿到人脸区域
@@ -42,6 +49,19 @@ void faceDetect(JNIEnv *env, Mat &src) {
 
         //在人脸部位画个图
         rectangle(src, faceRect, Scalar(255, 155, 144), 8, LINE_AA);
+
+        //人脸识别
+//        Mat face = src(faceRect).clone();
+//        resize(face, faces, Size(128, 128));
+//        cvtColor(face, faces, COLOR_BGRA2GRAY);
+//        int label = model->predict(face);
+//        if (label == 77) {
+//            putText(src, "本人", Point(faceRect.x + 20, faceRect.y - 20),
+//                    HersheyFonts::FONT_HERSHEY_PLAIN, 1, Scalar(255, 0, 0, 255), LINE_AA);
+//        } else {
+//            putText(src, "Unknown", Point(faceRect.x + 20, faceRect.y - 20),
+//                    HersheyFonts::FONT_HERSHEY_PLAIN, 1, Scalar(255, 0, 0, 255), LINE_AA);
+//        }
     }
 }
 
@@ -64,6 +84,47 @@ Java_com_cnting_opencv_FaceDetection_faceDetection(JNIEnv *env, jobject thiz, jl
     Mat *src = reinterpret_cast<Mat *> (mat_ptr);
     faceDetect(env, *src);
     return 0;
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_cnting_opencv_FaceDetection_trainingPattern(JNIEnv *env, jobject thiz) {
+    std::vector<Mat> faces;
+    std::vector<int> labels;
+    //录入自己的人脸
+    for (int i = 1; i <= 8; i++) {
+        Mat face = imread(format("/storage/emulated/0/face_%d.png", i), 0);
+        if (face.empty()) {
+            continue;
+        }
+        resize(face, face, Size(128, 128));
+        faces.push_back(face);
+        labels.push_back(77);
+    }
+    //样本训练
+//    model->train(faces, labels);
+//    model->save("/storage/emulated/0/face_ct_pattern.xml");
+    LOGE("样本训练成功");
+}
+/**
+ * 加载样本
+ */
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_cnting_opencv_FaceDetection_loadPattern(JNIEnv *env, jobject thiz, jstring file_path) {
+    const char *patternPath = env->GetStringUTFChars(file_path, 0);
+    //加载样本数据
+//    model->load<face::EigenFaceRecognizer>(patternPath);
+
+//    FileStorage fs(patternPath,FileStorage::READ);
+//    FileNode fn = fs.getFirstTopLevelNode();
+//    model->read(fn);
+
+
+
+    env->ReleaseStringUTFChars(file_path, patternPath);
+
+    LOGE("训练样本加载成功");
 }
 
 /**
@@ -474,3 +535,5 @@ Java_com_cnting_opencv_ObjDetectUtil_lbpBitmap(JNIEnv *env, jobject thiz, jobjec
     mat2Bitmap(env, result, resBitmap);
     return resBitmap;
 }
+
+

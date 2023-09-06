@@ -15,5 +15,14 @@ class FaceDetection {
      */
     external fun loadCascade(filePath: String)
 
+    /**
+     * 训练样本
+     */
+    external fun trainingPattern()
+
+    /**
+     * 加载样本
+     */
+    external fun loadPattern(filePath: String)
 
 }

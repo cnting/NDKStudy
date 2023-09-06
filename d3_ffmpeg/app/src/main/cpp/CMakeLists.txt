@@ -1,57 +1,63 @@
-# For more information about using CMake with Android Studio, read the
-# documentation: https://d.android.com/studio/projects/add-native-code.html
-
-# Sets the minimum version of CMake required to build the native library.
-
+#指定最低版本
 cmake_minimum_required(VERSION 3.22.1)
-
-# Declares and names the project.
 
 project("ffmpeg")
 
-#引入头文件，以这个配置的目录为基准
-include_directories(includes
-        ffmpeg)
+#引入头文件
+include_directories(${PROJECT_SOURCE_DIR}/includes
+        ${PROJECT_SOURCE_DIR}/ffmpeg)
 
-add_library( # Sets the name of the library.
-        ffmpeg
 
-        # Sets the library as a shared library.
+
+#指定共享库目录
+link_directories(${CMAKE_SOURCE_DIR}/../jniLibs/${ANDROID_ABI})
+
+#指定源文件的目录
+aux_source_directory(${CMAKE_SOURCE_DIR}/../cpp SRC_LIST)
+
+add_library(
+        music-player
+
         SHARED
 
-        # Provides a relative path to your source file(s).
-        native-lib.cpp
-
-        ffmpeg/cmdutils.c
-        ffmpeg/ffmpeg.c
-        ffmpeg/ffmpeg_filter.c
-        ffmpeg/ffmpeg_opt.c
+        ${SRC_LIST}
         )
+
+find_library(
+        log-lib
+        log)
+
 
 # 添加 ffmpeg 的 avcodec、swresample、avutil 模块
 set(distribution_DIR ${CMAKE_SOURCE_DIR}/../jniLibs/${ANDROID_ABI})
 
+#https://blog.csdn.net/LaineGates/article/details/108242803
+#IMPORTED 设置直接导入已经生成的库，cmake不会给这类library添加编译规则
 add_library(avcodec SHARED IMPORTED)
 set_target_properties(avcodec PROPERTIES IMPORTED_LOCATION ${distribution_DIR}/libavcodec.so)
+
+add_library(avdevice SHARED IMPORTED)
+set_target_properties(avdevice PROPERTIES IMPORTED_LOCATION ${distribution_DIR}/libavdevice.so)
+
+add_library(avfilter SHARED IMPORTED)
+set_target_properties(avfilter PROPERTIES IMPORTED_LOCATION ${distribution_DIR}/libavfilter.so)
+
+add_library(avformat SHARED IMPORTED)
+set_target_properties(avformat PROPERTIES IMPORTED_LOCATION ${distribution_DIR}/libavformat.so)
+
+add_library(avutil SHARED IMPORTED)
+set_target_properties(avutil PROPERTIES IMPORTED_LOCATION ${distribution_DIR}/libavutil.so)
+
+add_library(postproc SHARED IMPORTED)
+set_target_properties(postproc PROPERTIES IMPORTED_LOCATION ${distribution_DIR}/libpostproc.so)
 
 add_library(swresample SHARED IMPORTED)
 set_target_properties(swresample PROPERTIES IMPORTED_LOCATION ${distribution_DIR}/libswresample.so)
 
-add_library(avutil SHARED IMPORTED)
-set_target_properties(avutil PROPERTIES IMPORTED_LOCATION ${distribution_DIR}/libavutil.so)
+add_library(swscale SHARED IMPORTED)
+set_target_properties(swscale PROPERTIES IMPORTED_LOCATION ${distribution_DIR}/libswscale.so)
+
 # 添加 ffmpeg 的 avcodec、swresample、avutil 模块 end======
 
-find_library( # Sets the name of the path variable.
-        log-lib
-
-        # Specifies the name of the NDK library that
-        # you want CMake to locate.
-        log)
-
-
-target_link_libraries( # Specifies the target library.
-        ffmpeg
-        avcodec
-        swresample
-        avutil
-        ${log-lib})
+#为native-lib添加编译链接库
+target_link_libraries(music-player avcodec avdevice avfilter avformat avutil postproc swresample swscale -landroid ${log-lib})
