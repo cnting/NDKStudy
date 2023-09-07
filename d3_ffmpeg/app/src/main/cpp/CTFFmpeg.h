@@ -11,15 +11,16 @@ extern "C" {
 }
 
 #include "CTJNICall.h"
+#include "CTAudio.h"
 
 class CTFFmpeg {
 public:
     AVFormatContext *pFormatContext = NULL;
     AVCodecContext *pCodecContext = NULL;
     SwrContext *swrContext = NULL;
-    uint8_t *resampleOutBuffer;
     char *url = NULL;
     CTJNICall *pJniCall = NULL;
+    CTAudio* pAudio = NULL;
 public:
     CTFFmpeg(CTJNICall *pJniCall, const char *url);
 
@@ -35,8 +36,13 @@ public:
 
     void callPlayJniError(ThreadMode threadMode, int code, char *msg);
 
+
 private:
+
+
     void release();
+
+
 };
 
 

@@ -10,53 +10,16 @@ CTJNICall::CTJNICall(JavaVM *javaVm, JNIEnv *jniEnv, jobject jPlayerObj) {
     this->jniEnv = jniEnv;
     //全局引用可以跨线程
     this->jPlayerObj = jniEnv->NewGlobalRef(jPlayerObj);
-    initCreateAudioTrack();
 
     jclass jPlayerClass = jniEnv->FindClass("com/cnting/ffmpeg/media/CTPlayer");
     jPlayerErrorMid = jniEnv->GetMethodID(jPlayerClass, "onError", "(ILjava/lang/String;)V");
+    jPlayerPreparedMid = jniEnv->GetMethodID(jPlayerClass, "onPrepared", "()V");
 }
 
 CTJNICall::~CTJNICall() {
     jniEnv->DeleteGlobalRef(jPlayerObj);
 }
 
-void CTJNICall::initCreateAudioTrack() {
-/**
- * public AudioTrack(int streamType, int sampleRateInHz, int channelConfig, int audioFormat,
-            int bufferSizeInBytes, int mode)
- */
-    //创建AudioTrack
-    int streamType = 3;
-    int sampleRateInHz = AUDIO_SAMPLE_RATE;
-    int channelConfig = (0x4 | 0x8);
-    int audioFormat = 2;
-    int bufferSizeInBytes;
-    int mode = 1;
-
-    jclass jAudioTrackClass = jniEnv->FindClass("android/media/AudioTrack");
-    jmethodID jAudioTrackMid = jniEnv->GetMethodID(jAudioTrackClass, "<init>", "(IIIIII)V");
-
-    jmethodID getMinBufferSizeMid = jniEnv->GetStaticMethodID(jAudioTrackClass, "getMinBufferSize",
-                                                              "(III)I");
-    bufferSizeInBytes = jniEnv->CallStaticIntMethod(jAudioTrackClass, getMinBufferSizeMid,
-                                                    sampleRateInHz, channelConfig, audioFormat);
-
-    jAudioTrackObj = jniEnv->NewObject(jAudioTrackClass, jAudioTrackMid, streamType,
-                                       sampleRateInHz, channelConfig,
-                                       audioFormat, bufferSizeInBytes, mode);
-
-    //调用play()
-    jmethodID playMid = jniEnv->GetMethodID(jAudioTrackClass, "play", "()V");
-    jniEnv->CallVoidMethod(jAudioTrackObj, playMid);
-
-    jAudioTrackWriteMid = jniEnv->GetMethodID(jAudioTrackClass, "write", "([BII)I");
-}
-
-void
-CTJNICall::callAudioTrackWrite(jbyteArray audioData, int offsetInBytes, int sizeInBytes) const {
-    jniEnv->CallIntMethod(jAudioTrackObj, jAudioTrackWriteMid, audioData, offsetInBytes,
-                          sizeInBytes);
-}
 
 void CTJNICall::callPlayerError(ThreadMode threadMode, int code, char *msg) {
     if (threadMode == THREAD_MAIN) {
@@ -65,11 +28,30 @@ void CTJNICall::callPlayerError(ThreadMode threadMode, int code, char *msg) {
         jniEnv->DeleteLocalRef(str);
     } else {
         JNIEnv *env;
-        javaVM->AttachCurrentThread(&env, 0);
+        if (javaVM->AttachCurrentThread(&env, 0) != JNI_OK) {
+            LOGE("get child thread jniEnv error!");
+            return;
+        }
 
         jstring str = env->NewStringUTF(msg);
         env->CallVoidMethod(jPlayerObj, jPlayerErrorMid, code, str);
         env->DeleteLocalRef(str);
+
+        javaVM->DetachCurrentThread();
+    }
+}
+
+void CTJNICall::callPlayPrepared(ThreadMode threadMode) {
+    if (threadMode == THREAD_MAIN) {
+        jniEnv->CallVoidMethod(jPlayerObj, jPlayerPreparedMid);
+    } else {
+        JNIEnv *env;
+        if (javaVM->AttachCurrentThread(&env, 0) != JNI_OK) {
+            LOGE("get child thread jniEnv error!");
+            return;
+        }
+
+        env->CallVoidMethod(jPlayerObj, jPlayerPreparedMid);
 
         javaVM->DetachCurrentThread();
     }

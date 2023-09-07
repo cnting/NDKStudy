@@ -13,11 +13,10 @@ enum ThreadMode {
 
 class CTJNICall {
 public:
-    jobject jAudioTrackObj;
-    jmethodID jAudioTrackWriteMid;
     JavaVM *javaVM;
     JNIEnv *jniEnv;
     jmethodID jPlayerErrorMid;
+    jmethodID jPlayerPreparedMid;
     jobject jPlayerObj;
 
     void callPlayerError(ThreadMode threadMode, int code, char *msg);
@@ -27,10 +26,7 @@ public:
 
     ~CTJNICall();
 
-    void callAudioTrackWrite(jbyteArray audioData, int offsetInBytes, int sizeInBytes) const;
-
-private:
-    void initCreateAudioTrack();
+    void callPlayPrepared(ThreadMode threadMode);
 };
 
 

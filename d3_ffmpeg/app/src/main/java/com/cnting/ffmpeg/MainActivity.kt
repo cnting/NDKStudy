@@ -8,6 +8,7 @@ import android.widget.TextView
 import com.cnting.ffmpeg.databinding.ActivityMainBinding
 import com.cnting.ffmpeg.media.CTPlayer
 import com.cnting.ffmpeg.media.listener.MediaErrorListener
+import com.cnting.ffmpeg.media.listener.MediaPreparedListener
 import java.io.File
 import kotlin.concurrent.thread
 
@@ -30,14 +31,20 @@ class MainActivity : AppCompatActivity() {
 
         player = CTPlayer()
         player.setDataSource(file.absolutePath)
-        player.setErrorListener(object : MediaErrorListener {
+        player.errorListener = object : MediaErrorListener {
             override fun onError(code: Int, msg: String) {
                 Log.e("===>", "code:$code,msg:$msg")
             }
-        })
+        }
+        player.preparedListener = object : MediaPreparedListener {
+            override fun onPrepared() {
+                Log.d("===>", "准备完毕")
+                player.play()
+            }
+        }
 
         binding.sampleText.setOnClickListener {
-            player.play()
+            player.prepareAsync()
         }
     }
 

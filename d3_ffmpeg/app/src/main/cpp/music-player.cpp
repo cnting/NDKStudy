@@ -17,16 +17,38 @@ JavaVM *pJavaVm = NULL;
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_cnting_ffmpeg_media_CTPlayer_nPlay(JNIEnv *env, jobject thiz, jstring url_) {
-    env->GetJavaVM(&pJavaVm);
-    pJniCall = new CTJNICall(pJavaVm, env, thiz);
+Java_com_cnting_ffmpeg_media_CTPlayer_nPlay(JNIEnv *env, jobject thiz) {
+    if (pFFmpeg != NULL) {
+        pFFmpeg->play();
+    }
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_cnting_ffmpeg_media_CTPlayer_nPrepare(JNIEnv *env, jobject thiz, jstring url_) {
     const char *url = env->GetStringUTFChars(url_, 0);
-
-    pFFmpeg = new CTFFmpeg(pJniCall, url);
-    pFFmpeg->play();
-
+    if (pFFmpeg == NULL) {
+        env->GetJavaVM(&pJavaVm);
+        pJniCall = new CTJNICall(pJavaVm, env, thiz);
+        pFFmpeg = new CTFFmpeg(pJniCall, url);
+        pFFmpeg->prepare();
+    }
     env->ReleaseStringUTFChars(url_, url);
 }
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_cnting_ffmpeg_media_CTPlayer_nPrepareAsync(JNIEnv *env, jobject thiz, jstring url_) {
+    const char *url = env->GetStringUTFChars(url_, 0);
+    if (pFFmpeg == NULL) {
+        env->GetJavaVM(&pJavaVm);
+        pJniCall = new CTJNICall(pJavaVm, env, thiz);
+        pFFmpeg = new CTFFmpeg(pJniCall, url);
+        pFFmpeg->preparedAsync();
+    }
+    env->ReleaseStringUTFChars(url_, url);
+}
+
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_cnting_ffmpeg_media_CTPlayer_nRelease(JNIEnv *env, jobject thiz) {
@@ -39,3 +61,4 @@ Java_com_cnting_ffmpeg_media_CTPlayer_nRelease(JNIEnv *env, jobject thiz) {
         pFFmpeg = NULL;
     }
 }
+

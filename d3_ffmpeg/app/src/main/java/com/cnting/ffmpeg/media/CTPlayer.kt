@@ -1,6 +1,7 @@
 package com.cnting.ffmpeg.media
 
 import com.cnting.ffmpeg.media.listener.MediaErrorListener
+import com.cnting.ffmpeg.media.listener.MediaPreparedListener
 
 /**
  * Created by cnting on 2023/9/6
@@ -15,11 +16,8 @@ class CTPlayer {
     }
 
     private var url: String? = null
-    private var errorListener: MediaErrorListener? = null
-
-    fun setErrorListener(errorListener: MediaErrorListener) {
-        this.errorListener = errorListener
-    }
+    var errorListener: MediaErrorListener? = null
+    var preparedListener: MediaPreparedListener? = null
 
     /**
      * called from jni
@@ -28,19 +26,38 @@ class CTPlayer {
         errorListener?.onError(code, msg)
     }
 
+    /**
+     * called from jni
+     */
+    private fun onPrepared() {
+        preparedListener?.onPrepared()
+    }
+
     fun setDataSource(url: String) {
         this.url = url;
     }
 
     fun play() {
-        val finalUrl = url ?: throw NullPointerException("url is null! please call setDataSource()")
-        nPlay(finalUrl)
+        nPlay()
     }
 
-    fun release(){
+    fun release() {
         nRelease()
     }
 
-    private external fun nPlay(url: String)
+    fun prepare() {
+        val finalUrl = url ?: throw NullPointerException("url is null! please call setDataSource()")
+        nPrepare(finalUrl)
+    }
+
+    fun prepareAsync() {
+        val finalUrl = url ?: throw NullPointerException("url is null! please call setDataSource()")
+        nPrepareAsync(finalUrl)
+    }
+
+    private external fun nPlay()
     private external fun nRelease()
+    private external fun nPrepare(url: String)
+    private external fun nPrepareAsync(url: String)
+
 }

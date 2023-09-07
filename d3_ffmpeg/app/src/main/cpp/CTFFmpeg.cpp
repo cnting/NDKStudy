@@ -5,6 +5,8 @@
 #include "CTFFmpeg.h"
 #include "constants.h"
 #include "pthread.h"
+#include <SLES/OpenSLES.h>
+#include <SLES/OpenSLES_Android.h>
 
 CTFFmpeg::CTFFmpeg(CTJNICall *pJniCall, const char *url) {
     this->pJniCall = pJniCall;
@@ -17,17 +19,11 @@ CTFFmpeg::~CTFFmpeg() {
     release();
 }
 
-void *threadPlay(void *context) {
-    CTFFmpeg *pFFmpeg = (CTFFmpeg *) context;
-    pFFmpeg->prepare(THREAD_CHILD);
-    return 0;
-}
 
 void CTFFmpeg::play() {
-    //在子线程播
-    pthread_t playThreadT;
-    pthread_create(&playThreadT, NULL, threadPlay, this);
-    pthread_detach(playThreadT);
+    if (pAudio != NULL) {
+        pAudio->play();
+    }
 }
 
 void CTFFmpeg::callPlayJniError(ThreadMode threadMode, int code, char *msg) {
@@ -53,10 +49,6 @@ void CTFFmpeg::release() {
         free(swrContext);
         swrContext = NULL;
     }
-    if (resampleOutBuffer != NULL) {
-        free(resampleOutBuffer);
-        resampleOutBuffer = NULL;
-    }
     avformat_network_deinit();
     if (url != NULL) {
         free(this->url);
@@ -64,7 +56,20 @@ void CTFFmpeg::release() {
     }
 }
 
+
 void CTFFmpeg::prepare() { prepare(THREAD_MAIN); }
+
+void *threadPrepare(void *context) {
+    CTFFmpeg *pFFmpeg = (CTFFmpeg *) context;
+    pFFmpeg->prepare(THREAD_CHILD);
+    return 0;
+}
+
+void CTFFmpeg::preparedAsync() {
+    pthread_t prepareThreadT;
+    pthread_create(&prepareThreadT, NULL, threadPrepare, this);
+    pthread_detach(prepareThreadT);
+}
 
 void CTFFmpeg::prepare(ThreadMode threadMode) {
     avformat_network_init();
@@ -155,66 +160,14 @@ void CTFFmpeg::prepare(ThreadMode threadMode) {
         return;
     }
 
-    //写到AudioTrack.write(@NonNull byte[] audioData, int offsetInBytes, int sizeInBytes)
-    //要把pFrame.data转成java byte
-    int dataSize = av_samples_get_buffer_size(NULL,
-                                              out_ch_layout.nb_channels,
-                                              pCodecContext->frame_size,
-                                              out_sample_fmt,
-                                              0);
-    resampleOutBuffer = static_cast<uint8_t *>(malloc(dataSize));
     //-------------重采样 end------------
+    pAudio = new CTAudio(audioStreamIndex, pJniCall, pCodecContext, pFormatContext, swrContext);
 
-
-    //创建一个Java类型数组
-    jbyteArray jPcmByteArray = pJniCall->jniEnv->NewByteArray(dataSize);
-    //把Java类型数组转成C类型数组
-    jbyte *jPcmData = pJniCall->jniEnv->GetByteArrayElements(jPcmByteArray, 0);
-
-    AVPacket *pPacket = av_packet_alloc();
-    AVFrame *pFrame = av_frame_alloc();
-    while (av_read_frame(pFormatContext, pPacket) >= 0) {
-        if (pPacket->stream_index == audioStreamIndex) {
-            //发送数据到ffmpeg，放到解码队列中
-            int codeSendPacketRes = avcodec_send_packet(pCodecContext, pPacket);
-            if (codeSendPacketRes == 0) {
-                //从成功的解码队列中取出一帧
-                int codecReceiveFrameRes = avcodec_receive_frame(pCodecContext, pFrame);
-                if (codecReceiveFrameRes == 0) {
-                    if (pCodecContext->frame_size != pFrame->nb_samples) {
-                        LOGE("上面设置的:%d,pFrame->nb_samples:%d", pCodecContext->frame_size,
-                             pFrame->nb_samples);
-                    }
-                    //重采样
-                    swr_convert(swrContext, &resampleOutBuffer, pCodecContext->frame_size,
-                                (const uint8_t **) pFrame->data, pFrame->nb_samples);
-
-
-                    memcpy(jPcmData, resampleOutBuffer, dataSize);
-                    pJniCall->jniEnv->
-                            ReleaseByteArrayElements(jPcmByteArray, jPcmData, JNI_COMMIT);
-                    pJniCall->
-                            callAudioTrackWrite(jPcmByteArray,
-                                                0, dataSize);
-                }
-            }
-        }
-        //解引用
-        av_packet_unref(pPacket);
-        av_frame_unref(pFrame);
-    }
-    //1.解引用 data  2.销毁pPacket结构体内存  3.pPacket置为空
-    av_packet_free(&pPacket);
-    av_frame_free(&pFrame);
-    pJniCall->jniEnv->
-            ReleaseByteArrayElements(jPcmByteArray, jPcmData,
-                                     0);
-    pJniCall->jniEnv->
-            DeleteLocalRef(jPcmByteArray);
+    pJniCall->callPlayPrepared(threadMode);
 }
 
-void CTFFmpeg::preparedAsync() {
 
-}
+
+
 
 

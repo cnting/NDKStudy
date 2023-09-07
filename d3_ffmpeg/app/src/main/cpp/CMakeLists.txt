@@ -61,4 +61,4 @@ set_target_properties(swscale PROPERTIES IMPORTED_LOCATION ${distribution_DIR}/l
 # 添加 ffmpeg 的 avcodec、swresample、avutil 模块 end======
 
 #为native-lib添加编译链接库
-target_link_libraries(music-player avcodec avdevice avfilter avformat avutil postproc swresample swscale -landroid ${log-lib})
+target_link_libraries(music-player avcodec avdevice avfilter avformat avutil postproc swresample swscale -landroid OpenSLES ${log-lib})
