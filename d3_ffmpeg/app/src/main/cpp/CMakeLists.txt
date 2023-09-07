@@ -13,7 +13,7 @@ include_directories(${PROJECT_SOURCE_DIR}/includes
 link_directories(${CMAKE_SOURCE_DIR}/../jniLibs/${ANDROID_ABI})
 
 #指定源文件的目录
-aux_source_directory(${CMAKE_SOURCE_DIR}/../cpp SRC_LIST)
+aux_source_directory(${CMAKE_SOURCE_DIR} SRC_LIST)
 
 add_library(
         music-player
@@ -21,6 +21,7 @@ add_library(
         SHARED
 
         ${SRC_LIST}
+
         )
 
 find_library(
