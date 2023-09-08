@@ -16,8 +16,6 @@ extern "C" {
 class CTFFmpeg {
 public:
     AVFormatContext *pFormatContext = NULL;
-    AVCodecContext *pCodecContext = NULL;
-    SwrContext *swrContext = NULL;
     char *url = NULL;
     CTJNICall *pJniCall = NULL;
     CTAudio* pAudio = NULL;

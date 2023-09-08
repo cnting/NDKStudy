@@ -7,6 +7,8 @@
 
 
 #include "CTJNICall.h"
+#include "CTPacketQueue.h"
+#include "CTPlayerStatus.h"
 
 extern "C" {
 #include "includes/libavformat/avformat.h"
@@ -23,15 +25,23 @@ public:
     char *url = NULL;
     CTJNICall *pJniCall = NULL;
     int audioStreamIndex = -1;
+    CTPacketQueue *pPacketQueue = NULL;
+    CTPlayerStatus * pPlayerStatus = NULL;
 public:
-    CTAudio(int audioStreamIndex, CTJNICall *pJniCall, AVCodecContext *pCodecContext,
-            AVFormatContext *pFormatContext,SwrContext *swrContext);
+    CTAudio(int audioStreamIndex, CTJNICall *pJniCall,AVFormatContext *pFormatContext);
+    ~CTAudio();
 
     void play();
 
     int resampleAudio();
 
     void initCreateOpenSLES();
+
+    void analysisStream(ThreadMode threadMode);
+
+    void callPlayJniError(ThreadMode threadMode, int code, char *msg);
+
+    void release();
 };
 
 
