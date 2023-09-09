@@ -5,7 +5,7 @@ project("ffmpeg")
 
 #引入头文件
 include_directories(${PROJECT_SOURCE_DIR}/includes
-        ${PROJECT_SOURCE_DIR}/ffmpeg)
+        )
 
 
 
