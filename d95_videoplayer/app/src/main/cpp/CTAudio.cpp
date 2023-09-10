@@ -18,7 +18,6 @@ void *threadAudioPlay(void *context) {
     return 0;
 }
 
-
 void CTAudio::play() {
     pthread_t playThreadT;
     pthread_create(&playThreadT, NULL, threadAudioPlay, this);
@@ -127,6 +126,13 @@ int CTAudio::resampleAudio() {
                                        (const uint8_t **) pFrame->data,
                                        pFrame->nb_samples);
                 dataSize = dataSize * 2 * 2;
+
+                //设置当前时间
+                double times = pFrame->pts * av_q2d(timeBase);
+                if (times > currentTime) {
+                    currentTime = times;
+                }
+
                 break;
             }
         }

@@ -117,7 +117,7 @@ void CTFFmpeg::prepare(ThreadMode threadMode) {
         callPlayJniError(threadMode, FIND_STREAM_ERROR_CODE, "find video stream error");
         return;
     }
-    pVideo = new CTVideo(videoStreamIndex, pJniCall, pPlayerStatus);
+    pVideo = new CTVideo(videoStreamIndex, pJniCall, pPlayerStatus,pAudio);
     pVideo->analysisStream(threadMode, pFormatContext);
 
     pJniCall->callPlayPrepared(threadMode);

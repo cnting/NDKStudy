@@ -12,7 +12,6 @@
 extern "C" {
 #include "includes/libavcodec/avcodec.h"
 };
-
 class CTMedia {
 public:
     int streamIndex = -1;

@@ -72,6 +72,8 @@ void CTMedia::publicAnalysisStream(ThreadMode threadMode,  AVFormatContext* pFor
     }
     duration = pFormatContext->duration;
     timeBase = pFormatContext->streams[streamIndex]->time_base;
+
+    LOGE("timeBase: num:%d,den:%d",timeBase.num,timeBase.num);
 }
 
 void CTMedia::callPlayJniError(ThreadMode threadMode, int code, char *msg) {

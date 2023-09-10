@@ -37,6 +37,10 @@ class CTVideoView(context: Context?, attrs: AttributeSet?) : SurfaceView(context
     override fun onError(code: Int, msg: String) {
     }
 
+    /**
+     * TODO:如果是调用prepareAsync()，这里回调是在子线程，setSurface访问主线程jniEnv会报错
+     * 如何让onPrepared()在主线程中回调？
+     */
     override fun onPrepared() {
         Log.d("===>","当前线程:${Thread.currentThread().name}")
         player.setSurface(holder.surface);
