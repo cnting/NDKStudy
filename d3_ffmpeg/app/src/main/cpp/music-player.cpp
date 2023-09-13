@@ -52,15 +52,29 @@ Java_com_cnting_ffmpeg_media_CTPlayer_nPrepareAsync(JNIEnv *env, jobject thiz, j
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_cnting_ffmpeg_media_CTPlayer_nRelease(JNIEnv *env, jobject thiz) {
-    if (pJniCall != NULL) {
-        delete pJniCall;
-        pJniCall = NULL;
-    }
     if (pFFmpeg != NULL) {
         delete pFFmpeg;
         pFFmpeg = NULL;
+    }
+    if (pJniCall != NULL) {
+        delete pJniCall;
+        pJniCall = NULL;
     }
 }
 
 
 
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_cnting_ffmpeg_media_CTPlayer_nStop(JNIEnv *env, jobject thiz) {
+    if (pFFmpeg != NULL) {
+        pFFmpeg->stop();
+//        delete pFFmpeg;
+//        pFFmpeg = NULL;
+    }
+//    if (pJniCall != NULL) {
+//        delete pJniCall;
+//        pJniCall = NULL;
+//    }
+}

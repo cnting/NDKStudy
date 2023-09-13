@@ -18,11 +18,11 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 //        val file = File(getExternalFilesDir(null), "Butterfly-209.mp4")
-        //https://github.com/lokenetwork/FFmpeg-Principle/blob/main/encode/juren-30s.mp4
         val file = File(getExternalFilesDir(null), "juren-30s.mp4")
-        Log.d("===>", file.absolutePath)
+
         binding.playBtn.setOnClickListener {
             binding.videoView.play(file.absolutePath)
+//            binding.videoView.play("rtmp://localhost:1935/abcs/room")
         }
     }
 

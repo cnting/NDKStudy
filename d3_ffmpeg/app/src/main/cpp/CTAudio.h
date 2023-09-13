@@ -26,12 +26,16 @@ public:
     CTJNICall *pJniCall = NULL;
     int audioStreamIndex = -1;
     CTPacketQueue *pPacketQueue = NULL;
-    CTPlayerStatus * pPlayerStatus = NULL;
+    CTPlayerStatus *pPlayerStatus = NULL;
+    pthread_t readPacketThreadT;
 public:
-    CTAudio(int audioStreamIndex, CTJNICall *pJniCall,AVFormatContext *pFormatContext);
+    CTAudio(int audioStreamIndex, CTJNICall *pJniCall, AVFormatContext *pFormatContext);
+
     ~CTAudio();
 
     void play();
+
+    void stop();
 
     int resampleAudio();
 

@@ -17,6 +17,8 @@ public:
     JNIEnv *jniEnv;
     jmethodID jPlayerErrorMid;
     jmethodID jPlayerPreparedMid;
+    jmethodID jMusicInfoMid;
+    jmethodID jCallbackPcmMid;
     jobject jPlayerObj;
 
     void callPlayerError(ThreadMode threadMode, int code, char *msg);
@@ -27,6 +29,10 @@ public:
     ~CTJNICall();
 
     void callPlayPrepared(ThreadMode threadMode);
+
+    void callMusicInfo(ThreadMode threadMode, int sampleRate, int channels);
+
+    void callCallbackPcm(ThreadMode threadMode,  uint8_t *buffer, int size);
 };
 
 

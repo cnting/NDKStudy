@@ -25,6 +25,11 @@ void CTFFmpeg::play() {
         pAudio->play();
     }
 }
+void CTFFmpeg::stop() {
+    if (pAudio != NULL) {
+        pAudio->stop();
+    }
+}
 
 void CTFFmpeg::callPlayJniError(ThreadMode threadMode, int code, char *msg) {
     release();

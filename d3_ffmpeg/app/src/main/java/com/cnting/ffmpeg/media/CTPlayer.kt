@@ -1,6 +1,7 @@
 package com.cnting.ffmpeg.media
 
 import com.cnting.ffmpeg.media.listener.MediaErrorListener
+import com.cnting.ffmpeg.media.listener.MediaInfoListener
 import com.cnting.ffmpeg.media.listener.MediaPreparedListener
 
 /**
@@ -18,6 +19,7 @@ class CTPlayer {
     private var url: String? = null
     var errorListener: MediaErrorListener? = null
     var preparedListener: MediaPreparedListener? = null
+    var mediaInfoListener: MediaInfoListener? = null
 
     /**
      * called from jni
@@ -33,12 +35,30 @@ class CTPlayer {
         preparedListener?.onPrepared()
     }
 
+    /**
+     * called from jni
+     */
+    private fun musicInfo(sampleRate: Int, channels: Int) {
+        mediaInfoListener?.musicInfo(sampleRate, channels)
+    }
+
+    /**
+     * called from jni
+     */
+    private fun callbackPcm(pcmData: ByteArray, size: Int) {
+        mediaInfoListener?.callbackPcm(pcmData, size)
+    }
+
     fun setDataSource(url: String) {
         this.url = url;
     }
 
     fun play() {
         nPlay()
+    }
+
+    fun stop() {
+        nStop()
     }
 
     fun release() {
@@ -56,6 +76,7 @@ class CTPlayer {
     }
 
     private external fun nPlay()
+    private external fun nStop()
     private external fun nRelease()
     private external fun nPrepare(url: String)
     private external fun nPrepareAsync(url: String)

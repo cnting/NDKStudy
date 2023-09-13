@@ -8,6 +8,7 @@ import android.widget.TextView
 import com.cnting.ffmpeg.databinding.ActivityMainBinding
 import com.cnting.ffmpeg.media.CTPlayer
 import com.cnting.ffmpeg.media.listener.MediaErrorListener
+import com.cnting.ffmpeg.media.listener.MediaInfoListener
 import com.cnting.ffmpeg.media.listener.MediaPreparedListener
 import java.io.File
 import kotlin.concurrent.thread
@@ -42,9 +43,22 @@ class MainActivity : AppCompatActivity() {
                 player.play()
             }
         }
+        player.mediaInfoListener = object : MediaInfoListener {
+            override fun musicInfo(sampleRate: Int, channels: Int) {
+                Log.d("===>", "sampleRate:$sampleRate,channels:$channels")
+            }
 
-        binding.sampleText.setOnClickListener {
+            override fun callbackPcm(pcmData: ByteArray, size: Int) {
+                Log.d("===>", "pcmData:$pcmData,size:$size")
+            }
+
+        }
+
+        binding.startBtn.setOnClickListener {
             player.prepareAsync()
+        }
+        binding.stopBtn.setOnClickListener {
+            player.stop()
         }
     }
 

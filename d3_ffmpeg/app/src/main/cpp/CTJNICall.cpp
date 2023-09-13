@@ -2,6 +2,7 @@
 // Created by cnting on 2023/9/7.
 //
 
+#include <cstring>
 #include "CTJNICall.h"
 #include "constants.h"
 
@@ -14,6 +15,8 @@ CTJNICall::CTJNICall(JavaVM *javaVm, JNIEnv *jniEnv, jobject jPlayerObj) {
     jclass jPlayerClass = jniEnv->FindClass("com/cnting/ffmpeg/media/CTPlayer");
     jPlayerErrorMid = jniEnv->GetMethodID(jPlayerClass, "onError", "(ILjava/lang/String;)V");
     jPlayerPreparedMid = jniEnv->GetMethodID(jPlayerClass, "onPrepared", "()V");
+    jMusicInfoMid = jniEnv->GetMethodID(jPlayerClass, "musicInfo", "(II)V");
+    jCallbackPcmMid = jniEnv->GetMethodID(jPlayerClass, "callbackPcm", "([BI)V");
 }
 
 CTJNICall::~CTJNICall() {
@@ -53,6 +56,46 @@ void CTJNICall::callPlayPrepared(ThreadMode threadMode) {
 
         env->CallVoidMethod(jPlayerObj, jPlayerPreparedMid);
 
+        javaVM->DetachCurrentThread();
+    }
+}
+
+void CTJNICall::callMusicInfo(ThreadMode threadMode, int sampleRate, int channels) {
+    if (threadMode == THREAD_MAIN) {
+        jniEnv->CallVoidMethod(jPlayerObj, jMusicInfoMid, sampleRate, channels);
+    } else {
+        JNIEnv *env;
+        if (javaVM->AttachCurrentThread(&env, 0) != JNI_OK) {
+            LOGE("get child thread jniEnv error!");
+            return;
+        }
+
+        env->CallVoidMethod(jPlayerObj, jMusicInfoMid, sampleRate, channels);
+
+        javaVM->DetachCurrentThread();
+    }
+}
+
+void CTJNICall::callCallbackPcm(ThreadMode threadMode, uint8_t *buffer, int size) {
+    JNIEnv *env;
+    if (threadMode == THREAD_MAIN) {
+        env = jniEnv;
+    } else {
+        if (javaVM->AttachCurrentThread(&env, 0) != JNI_OK) {
+            LOGE("get child thread jniEnv error!");
+            return;
+        }
+    }
+
+    jbyteArray jPcmByteArray = env->NewByteArray(size);
+    jbyte *jPcmData = env->GetByteArrayElements(jPcmByteArray, 0);
+    //从buffer拷贝数据到jPcmData
+    memcpy(jPcmData, buffer, size);
+    env->ReleaseByteArrayElements(jPcmByteArray, jPcmData, 0);
+    env->CallVoidMethod(jPlayerObj, jCallbackPcmMid, jPcmByteArray, size);
+    env->DeleteLocalRef(jPcmByteArray);
+
+    if(threadMode==THREAD_CHILD){
         javaVM->DetachCurrentThread();
     }
 }

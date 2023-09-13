@@ -42,18 +42,25 @@ void *threadDecodePacket(void *context) {
 }
 
 void CTAudio::play() {
-    pthread_t readPacketThreadT;
     pthread_create(&readPacketThreadT, NULL, threadDecodePacket, this);
-    pthread_detach(readPacketThreadT);
+//    pthread_detach(readPacketThreadT);
 
     pthread_t playThreadT;
     pthread_create(&playThreadT, NULL, threadPlay, this);
     pthread_detach(playThreadT);
 }
 
+void CTAudio::stop() {
+    if (!pPlayerStatus->isExit) {
+        pPlayerStatus->isExit = true;
+        pthread_join(readPacketThreadT, NULL);
+    }
+}
+
 void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context) {
     CTAudio *audio = (CTAudio *) context;
     int dataSize = audio->resampleAudio();
+    audio->pJniCall->callCallbackPcm(THREAD_CHILD, audio->resampleOutBuffer, dataSize);
     (*bq)->Enqueue(bq, audio->resampleOutBuffer, dataSize);
 }
 
@@ -238,11 +245,6 @@ void CTAudio::analysisStream(ThreadMode threadMode) {
     int log_offset = 0;
     void *log_ctx = NULL;
 
-    LOGE("in===>channel:%d,format:%d,rate:%d", in_ch_layout.nb_channels, in_sample_fmt,
-         in_sample_rate);
-    LOGE("out===>channel:%d,format:%d,rate:%d", out_ch_layout.nb_channels, out_sample_fmt,
-         out_sample_rate);
-
     swr_alloc_set_opts2(&swrContext, &out_ch_layout, out_sample_fmt, out_sample_rate,
                         &in_ch_layout, in_sample_fmt, in_sample_rate,
                         log_offset, log_ctx);
@@ -257,6 +259,8 @@ void CTAudio::analysisStream(ThreadMode threadMode) {
     }
 
     resampleOutBuffer = static_cast<uint8_t *>(malloc(pCodecContext->frame_size * 2 * 2));
+
+    pJniCall->callMusicInfo(threadMode, AUDIO_SAMPLE_RATE, 2);
     //-------------重采样 end------------
 }
 

@@ -18,13 +18,15 @@ public:
     AVFormatContext *pFormatContext = NULL;
     char *url = NULL;
     CTJNICall *pJniCall = NULL;
-    CTAudio* pAudio = NULL;
+    CTAudio *pAudio = NULL;
 public:
     CTFFmpeg(CTJNICall *pJniCall, const char *url);
 
     ~CTFFmpeg();
 
     void play();
+
+    void stop();
 
     void prepare();
 
