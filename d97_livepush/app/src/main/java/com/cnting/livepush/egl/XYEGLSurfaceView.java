@@ -2,6 +2,7 @@ package com.cnting.livepush.egl;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -70,7 +71,7 @@ public abstract class XYEGLSurfaceView extends SurfaceView implements SurfaceHol
         if (xyEGLThread != null) {
             return xyEGLThread.getEglContext();
         }
-        return  null;
+        return null;
     }
 
     public void requestRender() {

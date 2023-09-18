@@ -23,7 +23,8 @@ class VideoRecordActivity : AppCompatActivity() {
         val savePath = File(getExternalFilesDir(null), "recorder.mp4")
         var isRecord = false
 
-        val videoRecorder = DefaultVideoRecorder(this, binding.cameraView.textureId)
+        val videoRecorder =
+            DefaultVideoRecorder(this, binding.cameraView.eglContext, binding.cameraView.textureId)
         videoRecorder.setOnMediaInfoListener(object : OnMediaInfoListener {
             override fun onMediaTime(times: Long) {
                 runOnUiThread {

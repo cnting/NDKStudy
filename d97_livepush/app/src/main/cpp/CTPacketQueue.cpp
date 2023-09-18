@@ -28,13 +28,14 @@ void CTPacketQueue::push(RTMPPacket *pPacket) {
 }
 
 RTMPPacket *CTPacketQueue::pop() {
-    RTMPPacket *packet;
+    RTMPPacket *packet = NULL;
     pthread_mutex_lock(&packetMutex);
-    while (pPacketQueue->empty()) {
+    if (pPacketQueue->empty()) {
         pthread_cond_wait(&packetCond, &packetMutex);
+    } else {
+        packet = pPacketQueue->front();
+        pPacketQueue->pop();
     }
-    packet = pPacketQueue->front();
-    pPacketQueue->pop();
     pthread_mutex_unlock(&packetMutex);
     return packet;
 }
@@ -50,5 +51,11 @@ void CTPacketQueue::clear() {
         RTMPPacket_Free(packet);
         free(packet);
     }
+    pthread_mutex_unlock(&packetMutex);
+}
+
+void CTPacketQueue::notify() {
+    pthread_mutex_lock(&packetMutex);
+    pthread_cond_signal(&packetCond);
     pthread_mutex_unlock(&packetMutex);
 }

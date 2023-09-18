@@ -15,6 +15,9 @@ public:
     char *liveUrl = NULL;
     CTPacketQueue *pPacketQueue = NULL;
     RTMP *rtmp = NULL;
+    bool isPushing = true;
+    uint32_t startTime;
+    pthread_t initConnectTid;
 public:
 
 
@@ -25,6 +28,16 @@ public:
     void initConnect();
 
     void release();
+
+    void pushSpsPps(jbyte *spsData, jint spsLength, jbyte *ppsData, jint ppsLength);
+
+
+    void pushVideo(jbyte *videoData, jint dataLen, jboolean keyFrame);
+
+
+    void pushAudio(jbyte *audioData, jint dataLen);
+
+    void stop();
 };
 
 

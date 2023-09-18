@@ -27,6 +27,8 @@ public:
     RTMPPacket *pop();
 
     void clear();
+
+    void notify();
 };
 
 

@@ -39,4 +39,18 @@ class LivePush(private val liveUrl: String) {
 
     private external fun nInitConnect(liveUrl: String)
     private external fun nStop()
+    external fun pushSpsPPs(
+        videoSps: ByteArray,
+        spsLength: Int,
+        videoPps: ByteArray,
+        ppsLength: Int
+    )
+
+    external fun pushVideo(videoData: ByteArray, length: Int, isKeyFrame: Boolean)
+    external fun pushAudio(audioData: ByteArray, dataLen: Int)
+
+    interface ConnectListener {
+        fun connectError(code: Int, msg: String)
+        fun connectSuccess()
+    }
 }
